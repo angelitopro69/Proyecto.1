@@ -193,8 +193,62 @@ if st.button("Descargar datos"):
         
         st.write("Últimos valores:")
         st.dataframe(df_rolling.tail())
-
         
+
+        #inciso E
+        st.subheader("Análisis de Eficiencia (Violaciones)")
+
+def calcular_violaciones(df_rolling, returns_col="Returns"):
+    
+    # Se agrega la lista con las metricas que se van a utilizar
+    metricas = [
+        "VaR_hist_95", "ES_hist_95", "VaR_hist_99", "ES_hist_99",
+        "VaR_param_95", "ES_param_95", "VaR_param_99", "ES_param_99"
+    ]
+    
+    # Se agrega una libreria con los nombres comletos de las metricas
+    nombres = {
+        "VaR_hist_95": "Histórico VaR 95%",
+        "ES_hist_95": "Histórico ES 95%",
+        "VaR_hist_99": "Histórico VaR 99%",
+        "ES_hist_99": "Histórico ES 99%",
+        "VaR_param_95": "Paramétrico VaR 95%",
+        "ES_param_95": "Paramétrico ES 95%",
+        "VaR_param_99": "Paramétrico VaR 99%",
+        "ES_param_99": "Paramétrico ES 99%",
+    }
+    
+    total_obs = len(df_rolling)
+    resultados = []
+
+    for metrica in metricas:
+        violaciones = (df_rolling[returns_col] < df_rolling[metrica]).sum()
+        porcentaje = (violaciones / total_obs) * 100
+        
+        resultados.append({
+            "Medida de Riesgo": nombres[metrica],
+            "Violaciones": int(violaciones),
+            "Porcentaje (%)": f"{porcentaje:.2f}"
+        })
+
+    return pd.DataFrame(resultados)
+
+
+
+tabla_eficiencia = calcular_violaciones(df_rolling)
+
+st.table(tabla_eficiencia)
+
+
+st.subheader("Porcentaje de violaciones")
+
+
+tabla_plot = tabla_eficiencia.copy()
+tabla_plot["Porcentaje (%)"] = tabla_plot["Porcentaje (%)"].astype(float)
+
+st.bar_chart(tabla_plot.set_index("Medida de Riesgo")["Porcentaje (%)"])
+
+
         # Inciso f VaR con volatilidad movil
         st.subheader("VaR con volatilidad móvil")
 
